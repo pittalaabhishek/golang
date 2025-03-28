@@ -7,5 +7,6 @@ func main() {
 	age := 30
 	fmt.Printf("Name: %s, Age: %d\n", name, age)
 	fmt.Println("Hello, World!")
-	fmt.Printf("hello dude\n")
+	i := 37
+	fmt.Println(i)
 }
