@@ -32,6 +32,7 @@ type Reservation struct {
 	StartDate  string
 	EndDate    string
 	TotalPrice float64
+	Paid       bool
 }
 
 // RentalSystem struct to manage the entire system
@@ -63,6 +64,15 @@ func (rs *RentalSystem) SearchCars(carType string, maxPrice float64) []Car {
 	return results
 }
 
+func (rs *RentalSystem) IsCarAvailable(carID int, startDate, endDate string) bool {
+	for _, res := range rs.Reservations {
+		if res.CarID == carID && res.StartDate <= endDate && res.EndDate >= startDate {
+			return false
+		}
+	}
+	return true
+}
+
 // CreateReservation creates a new reservation
 func (rs *RentalSystem) CreateReservation(customer Customer, carID int, startDate, endDate string) (Reservation, error) {
 	rs.mu.Lock()
@@ -88,6 +98,23 @@ func (rs *RentalSystem) CreateReservation(customer Customer, carID int, startDat
 	return Reservation{}, errors.New("car not available")
 }
 
+func (rs *RentalSystem) ModifyReservation(reservationID int, newStartDate, newEndDate string) error {
+	rs.mu.Lock()
+	defer rs.mu.Unlock()
+
+	for i, res := range rs.Reservations {
+		if res.ID == reservationID {
+			if rs.IsCarAvailable(res.CarID, newStartDate, newEndDate) {
+				rs.Reservations[i].StartDate = newStartDate
+				rs.Reservations[i].EndDate = newEndDate
+				return nil
+			}
+			return errors.New("car not available for new dates")
+		}
+	}
+	return errors.New("reservation not found")
+}
+
 // CancelReservation cancels an existing reservation
 func (rs *RentalSystem) CancelReservation(reservationID int) error {
 	rs.mu.Lock()
@@ -104,6 +131,23 @@ func (rs *RentalSystem) CancelReservation(reservationID int) error {
 			}
 			// Remove reservation
 			rs.Reservations = append(rs.Reservations[:i], rs.Reservations[i+1:]...)
+			return nil
+		}
+	}
+	return errors.New("reservation not found")
+}
+
+func (rs *RentalSystem) ProcessPayment(reservationID int) error {
+	rs.mu.Lock()
+	defer rs.mu.Unlock()
+
+	for i, res := range rs.Reservations {
+		if res.ID == reservationID {
+			if rs.Reservations[i].Paid {
+				return errors.New("reservation already paid")
+			}
+			rs.Reservations[i].Paid = true
+			fmt.Println("Payment processed successfully for reservation ID:", reservationID)
 			return nil
 		}
 	}
@@ -129,6 +173,20 @@ func main() {
 		fmt.Println("Error creating reservation:", err)
 	} else {
 		fmt.Println("Reservation created:", reservation)
+	}
+
+	// process payment
+	err = rentalSystem.ProcessPayment(reservation.ID)
+	if err != nil {
+		fmt.Println("Payment error:", err)
+	}
+
+	// Modify reservation
+	err = rentalSystem.ModifyReservation(reservation.ID, "2025-04-01", "2025-04-02")
+	if err != nil {
+		fmt.Println("Modification error:", err)
+	} else {
+		fmt.Println("Reservation modified successfully.")
 	}
 
 	// Canceling a reservation
