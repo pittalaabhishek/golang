@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
+	"os"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -22,8 +22,24 @@ type BlogPost struct {
 var db *gorm.DB
 
 func main() {
+	dbUser := os.Getenv("DB_USER")
+	if dbUser == "" {
+		dbUser = "root" // Default to root if not set
+	}
+	dbPassword := os.Getenv("DB_PASSWORD")
+	if dbPassword == "" {
+		dbPassword = "" // Default to empty password if not set
+	}
 
-	dsn := "root:Mo73cu73!@tcp(127.0.0.1:3306)/myDB?charset=utf8mb4&parseTime=True&loc=Local"
+	// Get the database name from the CLI or use the default
+	dbName := "myDB"
+	if len(os.Args) > 1 {
+		dbName = os.Args[1]
+	}
+
+	// Build the DSN
+	dsn := dbUser + ":" + dbPassword + "@tcp(127.0.0.1:3306)/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local"
+
 
 	var err error
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
