@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
+	"os"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -23,7 +23,21 @@ var db *gorm.DB
 
 func main() {
 
-	dsn := "root:Mo73cu73!@tcp(127.0.0.1:3306)/myDB?charset=utf8mb4&parseTime=True&loc=Local"
+	dbUser := os.Getenv("DB_USER")
+	if dbUser == "" {
+		dbUser = "root"
+	}
+	dbPassword := os.Getenv("DB_PASSWORD")
+	if dbPassword == "" {
+		dbPassword = ""
+	}
+
+	dbName := "myDB"
+	if len(os.Args) > 1 {
+		dbName = os.Args[1]
+	}
+
+	dsn := dbUser + ":" + dbPassword + "@tcp(127.0.0.1:3306)/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local"
 
 	var err error
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
