@@ -2,13 +2,16 @@ package main
 
 import "fmt"
 
-// Queue is a generic FIFO queue
-type Queue[T any] struct {
+// Queue is a generic FIFO queue with only int and string as allowed types
+type AllowedTypes interface {
+	int | string
+}
+type Queue[T AllowedTypes] struct {
 	items []T
 }
 
 // Create new empty queue
-func NewQueue[T any]() *Queue[T] {
+func NewQueue[T AllowedTypes]() *Queue[T] {
 	return &Queue[T]{items: make([]T, 0)}
 }
 
