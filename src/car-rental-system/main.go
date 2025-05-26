@@ -1,8 +1,8 @@
 package main
 
 import (
-	"car-rental-system/models"
-	"car-rental-system/services"
+	services "car-rental-system/handlers"
+	models "car-rental-system/rental_system_models"
 	"fmt"
 )
 
@@ -30,12 +30,17 @@ func main() {
 	}
 
 	// Modifying reservation
-	if err := rentalSystem.ModifyReservation(reservation.ID, "2025-04-01", "2025-04-02"); err == nil {
+	if err := rentalSystem.ModifyReservation(reservation.ID, "2025-04-01", "2025-04-06"); err == nil {
 		fmt.Println("Reservation modified successfully")
 	}
 
 	// Canceling reservation
 	if err := rentalSystem.CancelReservation(reservation.ID); err == nil {
-		fmt.Println("Reservation canceled.")
+		fmt.Println("Reservation cancelled.")
+	}
+
+	//Checking for the car availability
+	if availability, err := rentalSystem.IsCarAvailableOnDate(1, "2025-04-02"); err == nil {
+		fmt.Println("Is the car available:", availability)
 	}
 }
