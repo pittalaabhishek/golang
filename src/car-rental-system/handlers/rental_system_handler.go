@@ -1,7 +1,7 @@
 package services
 
 import (
-	"car-rental-system/models"
+	models "car-rental-system/rental_system_models"
 	"errors"
 	"fmt"
 	"sync"
@@ -110,6 +110,28 @@ func (rs *RentalSystem) CancelReservation(reservationID int) error {
 		car.IsAvailable = true
 	}
 
-delete(rs.reservations, reservationID)
+	delete(rs.reservations, reservationID)
 	return nil
+}
+
+func (rs *RentalSystem) IsCarAvailableOnDate(carID int, date string) (bool, error) {
+	rs.mu.Lock()
+	defer rs.mu.Unlock()
+
+	// Check if the car exists
+	_, exists := rs.cars[carID]
+	if !exists {
+		return false, errors.New("car not found")
+	}
+
+	for _, reservation := range rs.reservations {
+		if reservation.CarID == carID {
+			if date >= reservation.StartDate && date <= reservation.EndDate {
+				fmt.Println("The car is not available.")
+				return false, nil 
+			}
+		}
+	}
+
+	return true, nil // Car is available
 }
